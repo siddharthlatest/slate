@@ -1,15 +1,16 @@
 ---
-title: API Reference
+title: Appbase.io API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
+  - javascript
+  - go
   - ruby
   - python
-  - javascript
+  - java
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
+  - <a href='https://dashboard.appbase.io'>Sign Up for a Developer Account</a>
 
 includes:
   - errors
@@ -19,11 +20,18 @@ search: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the appbase.io API! appbase.io is a streaming database service built around Elasticsearch. You can use it to build reactive apps, realtime maps, blazing fast search and recommendations, chats, feeds, IoT apps.
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+![appbase.io in one image](https://i.imgur.com/iJpqtks.png?1)
 
-This example API documentation page was created with [Slate](https://github.com/tripit/slate). Feel free to edit it and use it as a base for your own API's documentation.
+A client device can subscribe to appbase.io for continuous queries and data updates. appbase.io keeps the connection alive and streams updates as JSON everytime there is a relevant change.
+
+We offer a HTTP based RESTful API service. Our streaming APIs work via HTTP, and we support websockets protocol as well for browsers and native mobile environments.
+
+We support a Javascript SDK that works on Node.JS, Browser, and with React Native environments. We also have REST API bindings for cURL, Go, Ruby, Python and Java.
+
+The entire API is transparently built on top of Elasticsearch, and any Elasticsearch client libraries should work with appbase.io service.
+
 
 # Authentication
 
@@ -55,19 +63,32 @@ let api = kittn.authorize('meowmeowmeow');
 
 > Make sure to replace `meowmeowmeow` with your API key.
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+All appbase.io endpoints require `credentials` which use Basic Authentication. appbase.io service offers two types of credentials:  
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
+1. Read Only: Good for public environments,  
+2. Read and Write: Good for secure environments, servers and API users.
 
-`Authorization: meowmeowmeow`
+![Create your own credentials]()
+
+
+`Authorization: Basic base64_encode(:credentials)`
 
 <aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+You must replace <code>meowmeowmeow</code> with your app's credentials.
 </aside>
 
-# Kittens
 
-## Get All Kittens
+# App
+
+All app related endpoints.
+
+## Get App
+
+```shell
+APP={YOUR_APP}
+CREDS={YOUR_CREDENTIALS}
+curl -X GET https://CREDS@scalr.api.appbase.io/$APP
+```
 
 ```ruby
 require 'kittn'
@@ -76,51 +97,66 @@ api = Kittn::APIClient.authorize!('meowmeowmeow')
 api.kittens.get
 ```
 
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"io/ioutil"
+)
+
+func main() {
+	APP := "YOUR_APP"
+	CREDENTIALS := "YOUR_CREDENTIALS"
+	url := "https://scalr.api.appbase.io/" + APP
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("Authorization", "Basic " + base64.StdEncoding.EncodeToString([]byte(CREDENTIALS)))
+
+	res, _ := http.DefaultClient.Do(req)
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	fmt.Println(res)
+	fmt.Println(string(body))
+}
+```
+
 ```python
-import kittn
+import http.client
+from base64 import b64encode
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
+APP = "YOUR_APP"
+CREDS = "YOUR_CREDENTIALS"
+conn = http.client.HTTPSConnection("scalr.api.appbase.io")
 
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
+headers = {
+    'authorization': "Basic " + b64encode(CREDS)
+}
 
-```javascript
-const kittn = require('kittn');
+conn.request("GET", "/" + APP, headers=headers)
 
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
+res = conn.getresponse()
+data = res.read()
+
+print(data.decode("utf-8"))
 ```
 
 > The above command returns JSON structured like this:
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
+{
+  "status": 200,
+  "message": "You have reached /{APP}/ and are all set to make API requests"
+}
 ```
 
-This endpoint retrieves all kittens.
+This is an informational endpoint to test if your API is all set.
 
 ### HTTP Request
 
-`GET http://example.com/api/kittens`
+`GET http://scalr.api.appbase.io/{APP}/`
 
 ### Query Parameters
 
